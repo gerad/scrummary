@@ -16,7 +16,6 @@ app.get('/ok', function(req, res, next) {
 });
 
 app.post('/hooks/github', function(req, res, next) {
-  console.log(req.body);
   save(req.body, function() {
     res.send(202);
   });
