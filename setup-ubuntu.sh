@@ -60,11 +60,11 @@ EOS
 chmod +x /etc/service/serverjs/run
 
 # Setting up runit logging...
-mkdir -p $deploy_home/shared/logs/server
+mkdir -p $deploy_home/logs/serverjs
 
 cat <<EOS > /etc/service/serverjs/log/run
 #!/bin/sh
-exec svlogd -tt $deploy_home/shared/logs/server
+exec svlogd -tt $deploy_home/logs/serverjs
 EOS
 chmod +x /etc/service/serverjs/log/run
 
@@ -76,7 +76,7 @@ sleep 1
 
 # Turning off the server until the first deploy...
 sv stop serverjs
-> $deploy_home/shared/logs/server/current
+> $deploy_home/logs/serverjs/current
 
 # Giving the deploy user the ability to control the service...
 chown -R deploy /etc/service/serverjs/supervise
