@@ -12,7 +12,7 @@ CONFIG=./deploy.conf
 LOG=/tmp/deploy.log
 TEST=1
 REF=
-ENV=
+ENV=scrummary
 
 #
 # Output usage information.
