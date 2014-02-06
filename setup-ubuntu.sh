@@ -80,6 +80,6 @@ sv stop serverjs
 
 # Giving the deploy user the ability to control the service...
 chown -R deploy /etc/service/serverjs/supervise
-chown -R deploy $deploy_home/shared
+chown -R deploy $deploy_home/logs
 
 # all done!

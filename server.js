@@ -6,6 +6,10 @@ var port = (process.env.NODE_ENV === 'production' ? 80 : 8000);
 
 app.use(express.json());
 
+app.get('/ok', function(req, res, next) {
+  res.send(200);
+});
+
 app.post('/hooks/github', function(req, res, next) {
   console.log(req.body);
   res.send(202);
