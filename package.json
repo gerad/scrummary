@@ -11,6 +11,7 @@
   "license": "BSD-2-Clause",
   "dependencies": {
     "request": "~2.33.0",
-    "express": "~3.4.8"
+    "express": "~3.4.8",
+    "mkdirp": "~0.3.5"
   }
 }
