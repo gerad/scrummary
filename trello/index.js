@@ -7,30 +7,29 @@ var config = require('../config').trello;
 Trello.api = require('./api')(config);
 // Trello.models = require('./models');
 
-function Trello(callback) {
+function Trello(opts, callback) {
   if (!(this instanceof Trello)) { return new Trello(callback); }
-
-  this.init();
-  this.on.done(callback);
-  this.load();
+  this.init(opts, callback);
 };
 
 Trello.prototype = {
-  init: function() {
-    this.on = on('done');
+  init: function(opts, callback) {
+    if (!callback) { callback = opts; opts = {}; }
+
+    this.since = opts.since
     this.cards = [];
     this.bindAll();
+    this.load(callback);
   },
 
-  load: function() {
+  load: function(done) {
     var _this = this;
 
     async.series([
       this.loadCards,
-    ], function(error) {
-      _this.on.done.fire({
-        cards: _this.cards
-      });
+    ], function(err) {
+      if (err) { return done(err); }
+      done(null, _this);
     });
   },
 

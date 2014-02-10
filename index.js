@@ -1,30 +1,75 @@
+module.exports = Scrummarizer;
+
 var github = require('./github');
 var trello = require('./trello');
+var moment = require('moment');
+var async = require('async');
 var log = console.log.bind(console);
 
-github(function(res) {
-  printIssues(res.issues);
-});
+function Scrummarizer(opts, callback) {
+  if (!(this instanceof Scrummarizer)) { return new Scrummarizer(opts, callback); }
+  this.init(opts, callback);
+}
 
-trello(function(res) {
-  printCards(res.cards);
-});
+Scrummarizer.prototype = {
+  init: function(opts, callback) {
+    if (!callback) { callback = opts; opts = {}; }
+
+    this.since = opts.since || Scrummarizer.since();
+    this.bindAll();
+    this.load(callback);
+  },
+
+  load: function(done) {
+    var _this = this;
+    async.parallel([
+      this.loadGitHub,
+      this.loadTrello,
+    ], function(err) {
+      if (err) { return done(err); }
+      done(null, _this);
+    });
+  },
+
+  loadGitHub: function(done) {
+    var _this = this;
+    github({ since: this.since }, function(err, res) {
+      if (err) { return done(err); }
+      _this.github = res;
+      done();
+    });
+  },
+
+  loadTrello: function(done) {
+    var _this = this;
+    trello({ since: this.since }, function(err, res) {
+      if (err) { return done(err); }
+      _this.trello = res;
+      done();
+    });
+  },
+
+  bindAll: function() {
+    this.loadGitHub = this.loadGitHub.bind(this);
+    this.loadTrello = this.loadTrello.bind(this);
+  }
+};
 
 function printIssues(issues) {
   for (var i = 0, l = issues.length, issue; i < l; i++) {
-    issue = issues[i];
-    var user = issue.user && issue.user.login;
-    var assignee = issue.assignee && issue.assignee.login;
-    var updated = new Date(Date.parse(issue.updated_at));
-    var created = new Date(Date.parse(issue.created_at));
-    var closed = (issue.state === 'closed');
-    var updated_today = updated > yesterday();
-    var created_today = created > yesterday();
+    var issue = issues[i];
+    var user = issue.user;
+    var assignee = issue.assignee;
+    var updated = issue.updated;
+    var created = issue.created;
+    var closed = issue.isClosed;
+    var updated_today = issue.wasUpdatedAfter(Scrummarizer.since());
+    var created_today = issue.wasCreatedAfter(Scrummarizer.since());
 
     if (closed && updated_today && assignee === 'gerad') {
       log('• fixed', issue.number, issue.title);
     } else if (created_today && user === 'gerad') {
-      log('• created', issue.number, issue.title);
+      log('• opened', issue.number, issue.title);
     } else if (!closed && assignee === 'gerad') {
       log('• planned', issue.number, issue.title);
     } else if (closed && updated_today && !assignee) {
@@ -46,13 +91,21 @@ function printCards(cards) {
   }
 }
 
-function yesterday() {
-  var yesterday = new Date(+today());
-  yesterday.setDate(yesterday.getDate() - 1);
-  return yesterday;
+Scrummarizer.since = function since() {
+  var since = moment().startOf('day');
+  if (since.day() === 1) { // monday
+    since.day(-2); // last friday
+  } else {
+    since.subtract(1, 'day');
+  }
+  return since.toDate();
 }
 
-function today() {
-  var now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-}
+Scrummarizer(function(err, res) {
+  if (err) { throw err; }
+
+  printIssues(res.github.summary.issues);
+  printCards(res.trello.cards);
+
+  // log(res.github.summary.for('gerad'));
+});
