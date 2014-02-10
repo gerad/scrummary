@@ -14,9 +14,12 @@ GitHubAPI.prototype = {
   baseurl:  'https://api.github.com/',
   headers: { 'User-Agent': 'scrummary-github-client' },
 
-  issues: function(opts, done) {
-    if (!done) { done = opts; opts = {}; }
+  issues: function(qs, done) {
+    var opts = {};
 
+    if (!done) { done = qs; qs = null; }
+
+    opts.qs = qs;
     opts.path = "repos/" + this.repo + "/issues";
     opts.paged = true;
 
